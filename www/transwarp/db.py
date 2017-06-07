@@ -1,4 +1,4 @@
-import sqlite3, logging, threading, time
+import sqlite3, logging, threading, time, functools
 
 class Dict(dict):
     def __init__(self, names=(), values=(), **kwargs):
@@ -35,13 +35,13 @@ class _Engine(object):
         self.__connect = connect
 
     def connect(self):
-        return self.__connect
+        return self.__connect()
 
-def create_engine(user, password, database, host, port, **kw):
+def create_engine(user='', password='', database='' , host='' , port='' , **kw):
     global engine
     if engine is not None:
         raise DBError('Engine is already initialized.')
-    engine = _Engine(lambda : sqlite3.connect('awesome.db'))
+    engine = _Engine(lambda : sqlite3.connect('example.db'))
     logging.info('Init sqlite engine <%s> ok.' % hex(id(engine)))
 
 class _LasyConnection(object):
@@ -63,7 +63,7 @@ class _LasyConnection(object):
     def cleanup(self):
         if self.connection:
             connection = self.connection
-            self.connection = None
+           # self.connection = None
             connection.close()
 
 
@@ -107,6 +107,7 @@ def connection():
 
 
 def with_connection(func):
+    @functools.wraps(func)
     def _wrapper(*args, **kwargs):
         with _ConnectionCtx():
             return func(*args, **kwargs)
@@ -151,6 +152,7 @@ def transaction():
     return _TransactionCtx()
 
 def with_transaction(func):
+    @functools.wraps(func)
     def _wrapper(*args, **kwargs):
         _start = time.time()
         with _TransactionCtx():
@@ -197,7 +199,7 @@ def select(sql, *args):
 def _update(sql, *args):
     global _db_ctx
     cursor = None
-    sql = sql.replace('?', '%s')
+    #sql = sql.replace('?', '%s')
     try:
         cursor = _db_ctx.connection.cursor()
         cursor.execute(sql, args)
@@ -216,10 +218,14 @@ def insert(table, **kw):
     return _update(sql, *args)
 
 def update(sql, *args):
+    return _update(sql, *args)
 
 
 
-
-
+create_engine()
+#update('drop table if exists user')
+#update('create table user (id int primary key, name text, email text, passwd text, last_modified real)')
+kw = {'date': '2006-01-05', 'trans': 'BUY', 'symbol': 'RHAT', 'qty': 100, 'price': 103}
+insert('stocks', **kw)
 
 
