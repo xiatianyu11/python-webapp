@@ -1,4 +1,4 @@
-import sqlite3, logging, threading, time, functools
+import sqlite3, logging, threading, time, functools, uuid
 
 class Dict(dict):
     def __init__(self, names=(), values=(), **kwargs):
@@ -20,6 +20,11 @@ class DBError(Exception):
 
 class MultiColumnsError(Exception):
     pass
+
+def next_id(t=None):
+    if t is None:
+        t = time.time()
+    return '%015d%s000' % (int(t * 1000), uuid.uuid4().hex)
 
 def _profiling(start, sql=''):
     t = time.time() - start
@@ -225,7 +230,7 @@ def update(sql, *args):
 create_engine()
 #update('drop table if exists user')
 #update('create table user (id int primary key, name text, email text, passwd text, last_modified real)')
-kw = {'date': '2006-01-05', 'trans': 'BUY', 'symbol': 'RHAT', 'qty': 100, 'price': 103}
-insert('stocks', **kw)
+#kw = {'name': 'Test', 'admin': 0, 'created_at': 1496910289.864138, 'email': 'test@example.com', 'id': '0014969102898646452640faadb40f885c177fee7799211001', 'password': '1234567890', 'image': 'about:blank'}
+#insert('users', **kw)
 
 
